@@ -1,4 +1,4 @@
-## Solución PicoCTF: SSTI1 (Server Side Template Injection)
+Solución PicoCTF: SSTI1 (Server Side Template Injection)
 Este documento detalla la resolución del reto SSTI1 de la plataforma picoCTF, basado en el video de S4viSinFiltro. El objetivo es explotar una vulnerabilidad de inyección de plantillas en el servidor para obtener ejecución remota de comandos (RCE) y leer la bandera (flag).
 
 1. Fase de Reconocimiento y Enumeración
