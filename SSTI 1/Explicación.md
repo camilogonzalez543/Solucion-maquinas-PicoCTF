@@ -1,6 +1,8 @@
 # 🚀 Solución PicoCTF: SSTI1
 > **Vulnerabilidad:** Server Side Template Injection (SSTI)
-> **Explicación Vulnerabilidad:** [Server Side Template Injection (SSTI) ](https://book.hacktricks.wiki/en/pentesting-web/ssti-server-side-template-injection/index.html) 
+
+> **Explicación Vulnerabilidad:** [Server Side Template Injection (SSTI) ](https://book.hacktricks.wiki/en/pentesting-web/ssti-server-side-template-injection/index.html)
+
 > **Plataforma:** [picoCTF](https://play.picoctf.org/)  
 
 ---
